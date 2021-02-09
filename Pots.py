@@ -75,8 +75,8 @@ df = df[~((df['AnomalousDuration'] == True) | (df['AnomalousMovementDuration'] =
 #---------------------------------------------------------------------------------------------------------------------------------#
 #                                                                                                                                 *
 #---Detectar registros de duración 0----------------------------------------------------------------------------------------------#
-df_outliers = pd.concat([df_outliers,df_no_outliers[df_no_outliers['Duration'] == 0]])                                            #
-df = df[~(df_no_outliers['Duration'] == 0)]                                                                                       #
+df_outliers = pd.concat([df_outliers,df[df['Duration'] == 0]])                                                                    #
+df = df[~(df['Duration'] == 0)]                                                                                                   #
 df = df.reset_index(drop = True)                                                                                                  #
 #---------------------------------------------------------------------------------------------------------------------------------#
 #                                                                                                                                 *
@@ -91,8 +91,8 @@ df = df[~((df['MovementDuration']==0) & (df['MovementInteractions']>0))]        
 #---------------------------------------------------------------------------------------------------------------------------------#
 #                                                                                                                                 *
 #---Detectar registros donde duración es igual a duración de movimiento e interacción con maravilloso módulo >0-------------------#
-diff = df_no_outliers['Duration'] - df['MovementDuration']                                                                        #
-df_outliers = pd.concat(df_outliers,df[(diff == 0) & (df['ArkboxInteractions'] > 0)])                                             #
+diff = df['Duration'] - df['MovementDuration']                                                                                    #
+df_outliers = pd.concat([df_outliers,df[(diff == 0) & (df['ArkboxInteractions'] > 0)]])                                             #
 #---------------------------------------------------------------------------------------------------------------------------------#
 #                                                                                                                                 #
 #***********************************************FIN LIMPIAR DATOS*****************************************************************#
@@ -132,24 +132,26 @@ other_2 = df_pots[['PotKey','Serial']].rename(columns = {'PotKey':'Potkey'}).set
 #---------------------------------------------------------------------------------------------------------------------------------#
 #                                                                                                                                 *
 #---¿Cuál es el top 10 de las ciudades con más movimientos registrados por los usuarios?------------------------------------------#
-df_preg1 = df_info.join(other = other_1, on = 'Potkey', how = 'left')[['Name','MovementInteractions']].\                          #
+df_preg1 = df_info.join(other = other_1, on = 'Potkey', how = 'left')[['Name','MovementInteractions']].\
 groupby('Name')[['MovementInteractions']].sum().sort_values(by = 'MovementInteractions', ascending = False).head(10)              #
                                                                                                                                   #
-df_preg1.to_csv(r'Documents\Prueba Tekus\preg1.csv')                                                                              #
+df_preg1.to_csv(r'Documents\Prueba Tekus II\preg1.csv')                                                                           #
                                                                                                                                   #
 #---------------------------------------------------------------------------------------------------------------------------------#
 #                                                                                                                                 *
 #-¿Cuál es el top 10 de las ollas con más interacciones de los usuarios con el extraordinario panel interactivo de un solo botón?-#
-df_preg2 = df_info.join(other = other_2, on = 'Potkey', how = 'left')[['Serial','ArkboxInteractions']].\                          #
+df_preg2 = df_info.join(other = other_2, on = 'Potkey', how = 'left')[['Serial','ArkboxInteractions']].\
 groupby('Serial')[['ArkboxInteractions']].sum().sort_values(by = 'ArkboxInteractions', ascending = False).head(10)                #
                                                                                                                                   #
-df_preg2.to_csv(r'Documents\Prueba Tekus\preg2.csv')                                                                              #
+df_preg2.to_csv(r'Documents\Prueba Tekus II\preg2.csv')                                                                           #
                                                                                                                                   #
 #---------------------------------------------------------------------------------------------------------------------------------#
 #                                                                                                                                 *
 #---¿Cuáles son los horarios entre semana y fines de semana en dónde se presentan más desplazamientos de ollas?-------------------#
 df_preg3 = df_info.groupby(['WeekDay','TimeofDay'])[['MovementInteractions']].sum()                                               #
                                                                                                                                   #
-df_preg3.to_csv(r'Documents\Prueba Tekus\preg2.csv')                                                                              #
+df_preg3.to_csv(r'Documents\Prueba Tekus II\preg3.csv')                                                                           #
                                                                                                                                   #
 #---------------------------------------------------------------------------------------------------------------------------------#
+
+my_conn.close()
