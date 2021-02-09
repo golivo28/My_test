@@ -41,7 +41,7 @@ df.drop(columns = ['HardwareInteractions','StandardInteractions','TenantId','Ses
 df = df.reset_index(drop = True)                                                                                                  #
 #---------------------------------------------------------------------------------------------------------------------------------#
 #                                                                                                                                 *
-#---Detectar y excluir duraciones que excedan diferencia entre registros consecurivos---------------------------------------------#
+#---Detectar y excluir duraciones que excedan diferencia entre registros consecutivos---------------------------------------------#
 df['DatetimeFmt'] = pd.to_datetime(df['Date'].apply(lambda x: x[0:24]))                                                           #
 df['WeekDay'] = df['DatetimeFmt'].dt.day_name()                                                                                   #
 df['Hour'] = df['DatetimeFmt'].dt.hour                                                                                            #
@@ -70,31 +70,59 @@ df['AnomalousDuration'] = df['Duration'] > df['Differences']                    
 df['AnomalousMovementDuration'] = df['MovementDuration'] > df['Differences']                                                      #
                                                                                                                                   #
 #-----                                                                                                                            #
-df_outliers = df[(df['AnomalousDuration'] == True) | (df['AnomalousMovementDuration'] == True)]                                   #  
+df_outliers = df[(df['AnomalousDuration'] == True) | (df['AnomalousMovementDuration'] == True)]                                   #
+df_outliers = df_outliers.reset_index(drop = True)                                                                                #
+df_outliers.loc[df_outliers[(df_outliers['AnomalousDuration'] == True) | (df_outliers['AnomalousMovementDuration'] == True)].\
+                index,'FailureType'] = 'Wrong duration readings'                                                                  #
+                                                                                                                                  #
 df = df[~((df['AnomalousDuration'] == True) | (df['AnomalousMovementDuration'] == True))]                                         #
 #---------------------------------------------------------------------------------------------------------------------------------#
 #                                                                                                                                 *
 #---Detectar registros de duración 0----------------------------------------------------------------------------------------------#
 df_outliers = pd.concat([df_outliers,df[df['Duration'] == 0]])                                                                    #
+df_outliers = df_outliers.reset_index(drop = True)                                                                                #
+df_outliers.loc[df_outliers[df_outliers['Duration'] == 0].index, 'FailureType'] = 'No duration reading'                           #
+                                                                                                                                  #
 df = df[~(df['Duration'] == 0)]                                                                                                   #
 df = df.reset_index(drop = True)                                                                                                  #
 #---------------------------------------------------------------------------------------------------------------------------------#
 #                                                                                                                                 *
 #---Detectar interacciones 0------------------------------------------------------------------------------------------------------#
 df_outliers = pd.concat([df_outliers, df[(df['MovementInteractions'] == 0) & (df['ArkboxInteractions'] == 0)]])                   #
+df_outliers = df_outliers.reset_index(drop = True)                                                                                #
+df_outliers.loc[df_outliers[(df_outliers['MovementInteractions'] == 0) & (df_outliers['ArkboxInteractions'] == 0)].index,         #   
+                'FailureType'] = 'No interactions reading'                                                                        #
+                                                                                                                                  #
 df = df[~((df['MovementInteractions'] == 0) & (df['ArkboxInteractions'] == 0))]                                                   #
 #---------------------------------------------------------------------------------------------------------------------------------#
 #                                                                                                                                 *
 #---Detectar registros de duración de movimiento 0 con interacciones de movimiento > 0--------------------------------------------#
 df_outliers = pd.concat([df_outliers,df[(df['MovementDuration']==0) & (df['MovementInteractions']>0)]])                           #
+df_outliers = df_outliers.reset_index(drop = True)                                                                                #
+df_outliers.loc[df_outliers[(df_outliers['MovementDuration']==0) & (df_outliers['MovementInteractions']>0)].index,                #
+                'FailureType'] = 'Mov. interactions without Mov. Duration'                                                        #
+                                                                                                                                  #
 df = df[~((df['MovementDuration']==0) & (df['MovementInteractions']>0))]                                                          #
 #---------------------------------------------------------------------------------------------------------------------------------#
 #                                                                                                                                 *
 #---Detectar registros donde duración es igual a duración de movimiento e interacción con maravilloso módulo >0-------------------#
 diff = df['Duration'] - df['MovementDuration']                                                                                    #
-df_outliers = pd.concat([df_outliers,df[(diff == 0) & (df['ArkboxInteractions'] > 0)]])                                             #
+df_outliers = pd.concat([df_outliers,df[(diff == 0) & (df['ArkboxInteractions'] > 0)]])                                           #
+df_outliers = df_outliers.reset_index(drop = True)                                                                                #
+df_outliers.loc[df_outliers[(diff == 0) & (df_outliers['ArkboxInteractions'] > 0)].index,                                         #
+                'FailureType'] = 'Mod. interactions without Mod. Duration'                                                        #
+                                                                                                                                  #
+df = df[~((diff == 0) & (df['ArkboxInteractions'] > 0))]                                                                          #
 #---------------------------------------------------------------------------------------------------------------------------------#
-#                                                                                                                                 #
+#                                                                                                                                 *
+#---Detectar registros donde duración es mayor a duración de movimiento e interacción con maravilloso módulo es igual a 0---------#
+df_outliers = pd.concat([df_outliers,df[(diff > 0) & (df['ArkboxInteractions'] == 0)]])                                           #
+df_outliers = df_outliers.reset_index(drop = True)                                                                                #
+df_outliers.loc[df_outliers[(diff > 0) & (df_outliers['ArkboxInteractions'] == 0)].index,                                         #
+                'FailureType'] = 'Mod. interactions without Mod. Duration'                                                        #
+                                                                                                                                  #
+df = df[~((diff > 0) & (df['ArkboxInteractions'] == 0))]                                                                          #
+                                                                                                                                  #
 #***********************************************FIN LIMPIAR DATOS*****************************************************************#
 
 #***********************************************ANÁLISIS**************************************************************************#
@@ -152,6 +180,13 @@ df_preg3 = df_info.groupby(['WeekDay','TimeofDay'])[['MovementInteractions']].su
                                                                                                                                   #
 df_preg3.to_csv(r'Documents\Prueba Tekus II\preg3.csv')                                                                           #
                                                                                                                                   #
-#---------------------------------------------------------------------------------------------------------------------------------#
+#***********************************************FIN ANÁLISIS**********************************************************************#
 
-my_conn.close()
+#***********************************************ANÁLISIS COMPLEMENTARIO***********************************************************#
+import PotsFailures                                                                                                               #
+                                                                                                                                  #
+PotsFailures.failures(df_outliers, df_info, other_2)                                                                              #
+                                                                                                                                  #
+my_conn.close()                                                                                                                   #
+                                                                                                                                  #
+#***********************************************FIN ANÁLISIS COMPLEMENTARIO*******************************************************#
