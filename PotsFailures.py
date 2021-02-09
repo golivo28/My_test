@@ -1,5 +1,7 @@
 #ANÁLISIS COMPLEMENTARIO
 
+import pandas as pd
+import numpy as np
 
 def failures(df_outliers, df_info, other_2):
     df_outliers = df_outliers.rename(columns = {'Key':'Potkey'})[['Duration','MovementDuration','MovementInteractions',

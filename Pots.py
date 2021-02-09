@@ -106,22 +106,23 @@ df = df[~((df['MovementDuration']==0) & (df['MovementInteractions']>0))]        
 #---------------------------------------------------------------------------------------------------------------------------------#
 #                                                                                                                                 *
 #---Detectar registros donde duración es igual a duración de movimiento e interacción con maravilloso módulo >0-------------------#
-diff = df['Duration'] - df['MovementDuration']                                                                                    #
-df_outliers = pd.concat([df_outliers,df[(diff == 0) & (df['ArkboxInteractions'] > 0)]])                                           #
+diff = df_outliers['Duration'] - df_outliers['MovementDuration']                                                                  #
+diff_df = df['Duration'] - df['MovementDuration']                                                                                 #
+df_outliers = pd.concat([df_outliers,df[(diff_df == 0) & (df['ArkboxInteractions'] > 0)]])                                        #
 df_outliers = df_outliers.reset_index(drop = True)                                                                                #
 df_outliers.loc[df_outliers[(diff == 0) & (df_outliers['ArkboxInteractions'] > 0)].index,                                         #
                 'FailureType'] = 'Mod. interactions without Mod. Duration'                                                        #
                                                                                                                                   #
-df = df[~((diff == 0) & (df['ArkboxInteractions'] > 0))]                                                                          #
+df = df[~((diff_df == 0) & (df['ArkboxInteractions'] > 0))]                                                                       #
 #---------------------------------------------------------------------------------------------------------------------------------#
 #                                                                                                                                 *
 #---Detectar registros donde duración es mayor a duración de movimiento e interacción con maravilloso módulo es igual a 0---------#
-df_outliers = pd.concat([df_outliers,df[(diff > 0) & (df['ArkboxInteractions'] == 0)]])                                           #
+df_outliers = pd.concat([df_outliers,df[(diff_df > 0) & (df['ArkboxInteractions'] == 0)]])                                        #
 df_outliers = df_outliers.reset_index(drop = True)                                                                                #
 df_outliers.loc[df_outliers[(diff > 0) & (df_outliers['ArkboxInteractions'] == 0)].index,                                         #
                 'FailureType'] = 'Mod. interactions without Mod. Duration'                                                        #
                                                                                                                                   #
-df = df[~((diff > 0) & (df['ArkboxInteractions'] == 0))]                                                                          #
+df = df[~((diff_df > 0) & (df['ArkboxInteractions'] == 0))]                                                                       #
                                                                                                                                   #
 #***********************************************FIN LIMPIAR DATOS*****************************************************************#
 
