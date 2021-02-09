@@ -17,7 +17,7 @@ df_cities = pd.read_sql_query('SELECT * FROM Cities',my_conn)   #--> será usado
 
 #***********************************************LEER CSV's************************************************************************#
 #                                                                                                                                 #
-route = r'Documents\Prueba Tekus'                                                                                                 #
+route = r'Documents\Prueba Tekus'    #---> Directorio de carpeta que contiene datos de las ollas                                  #
 df = pd.DataFrame()                                                                                                               #
                                                                                                                                   #
 for i in os.listdir(route):                                                                                                       #
@@ -97,11 +97,59 @@ df_outliers = pd.concat(df_outliers,df[(diff == 0) & (df['ArkboxInteractions'] >
 #                                                                                                                                 #
 #***********************************************FIN LIMPIAR DATOS*****************************************************************#
 
-df = df[['Duration','MovementDuration','MovementInteractions','HardwareInteractions','Key','DatetimeFmt','DayofWeek','Time']]
-
-df.rename(columns = {'DatetimeFmt':'Date',
-                     'Key':'PotKey'},inplace = True)
-
-#---------------------------
-
-
+#***********************************************ANÁLISIS**************************************************************************#
+#                                                                                                                                 *
+#---Retoques a datos previo a responder preguntas---------------------------------------------------------------------------------#
+df_info = df[['Duration','MovementDuration','MovementInteractions','ArkboxInteractions','Key','Date','WeekDay',                   #
+                          'Hour']].rename(columns = {'Key':'Potkey'}).set_index('Potkey',drop = True)                             #
+                                                                                                                                  #
+df_info['Hour'] = df_info['Hour'].astype('int64')                                                                                 #
+df_info['WeekDay'] = df_info['WeekDay'].map({'Monday':'Weekday',                                                                  #
+                                             'Tuesday':'Weekday',                                                                 #
+                                             'Wednesday':'Weekday',                                                               #
+                                             'Thursday':'Weekday',                                                                #
+                                             'Friday':'Weekday',                                                                  #
+                                             'Saturday':'Weekend',                                                                #
+                                             'Sunday':'Weekend'})                                                                 #
+                                                                                                                                  #
+for k,i in enumerate(df_info['Hour']):                                                                                            #
+    if i >= 5 and i <= 11:                                                                                                        #
+        df_info.loc[df_info.index[k],'TimeofDay'] = '05:00 - 11:59 Morning'                                                       #
+    elif i >= 12 and i <= 16:                                                                                                     #
+        df_info.loc[df_info.index[k],'TimeofDay'] = '12:00 - 16:59 Afternoon'                                                     #
+    elif i >= 17 and i <= 20:                                                                                                     #
+        df_info.loc[df_info.index[k],'TimeofDay'] = '17:00 - 20:59 Evening'                                                       #
+    elif i >=21 or i <= 4:                                                                                                        #
+        df_info.loc[df_info.index[k],'TimeofDay'] = '21:00 - 4:59 Night'                                                          #                                                                                                                                           #
+#---------------------------------------------------------------------------------------------------------------------------------#
+#                                                                                                                                 *
+#---Crear tablas que serán usadas para contestar preguntas------------------------------------------------------------------------#
+other_1 = pd.read_sql("SELECT p.Potkey, c.Name FROM Pots p INNER JOIN Cities c ON p.CityId = c.CityId",                           #
+                      my_conn).set_index('Potkey', drop = True)                                                                   #
+                                                                                                                                  #
+other_2 = df_pots[['PotKey','Serial']].rename(columns = {'PotKey':'Potkey'}).set_index('Potkey', drop = True)                     #
+                                                                                                                                  #
+#---------------------------------------------------------------------------------------------------------------------------------#
+#                                                                                                                                 *
+#---¿Cuál es el top 10 de las ciudades con más movimientos registrados por los usuarios?------------------------------------------#
+df_preg1 = df_info.join(other = other_1, on = 'Potkey', how = 'left')[['Name','MovementInteractions']].\                          #
+groupby('Name')[['MovementInteractions']].sum().sort_values(by = 'MovementInteractions', ascending = False).head(10)              #
+                                                                                                                                  #
+df_preg1.to_csv(r'Documents\Prueba Tekus\preg1.csv')                                                                              #
+                                                                                                                                  #
+#---------------------------------------------------------------------------------------------------------------------------------#
+#                                                                                                                                 *
+#-¿Cuál es el top 10 de las ollas con más interacciones de los usuarios con el extraordinario panel interactivo de un solo botón?-#
+df_preg2 = df_info.join(other = other_2, on = 'Potkey', how = 'left')[['Serial','ArkboxInteractions']].\                          #
+groupby('Serial')[['ArkboxInteractions']].sum().sort_values(by = 'ArkboxInteractions', ascending = False).head(10)                #
+                                                                                                                                  #
+df_preg2.to_csv(r'Documents\Prueba Tekus\preg2.csv')                                                                              #
+                                                                                                                                  #
+#---------------------------------------------------------------------------------------------------------------------------------#
+#                                                                                                                                 *
+#---¿Cuáles son los horarios entre semana y fines de semana en dónde se presentan más desplazamientos de ollas?-------------------#
+df_preg3 = df_info.groupby(['WeekDay','TimeofDay'])[['MovementInteractions']].sum()                                               #
+                                                                                                                                  #
+df_preg3.to_csv(r'Documents\Prueba Tekus\preg2.csv')                                                                              #
+                                                                                                                                  #
+#---------------------------------------------------------------------------------------------------------------------------------#
