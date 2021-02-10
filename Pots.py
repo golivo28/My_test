@@ -179,9 +179,9 @@ df_preg2.to_excel(r'Documents\Prueba Tekus II\preg2.xlsx')                      
 #---------------------------------------------------------------------------------------------------------------------------------#
 #                                                                                                                                 *
 #---¿Cuáles son los horarios entre semana y fines de semana en dónde se presentan más desplazamientos de ollas?-------------------#
-df_preg3 = df_info.groupby(['WeekDay','TimeofDay'],as_index = False)[['MovementInteractions']].sum()                                               #
+df_preg3 = df_info.groupby(['WeekDay','TimeofDay'],as_index = False)[['MovementInteractions']].sum()                              #                                                                                                                                           #
                                                                                                                                   #
-df_preg3.to_excel(r'Documents\Prueba Tekus II\preg3.xlsx', index = False)                                                                        #
+df_preg3.to_excel(r'Documents\Prueba Tekus II\preg3.xlsx', index = False)                                                         #                                                                                                                                           #
                                                                                                                                   #
 #***********************************************FIN ANÁLISIS**********************************************************************#
 
