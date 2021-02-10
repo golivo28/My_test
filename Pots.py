@@ -106,23 +106,25 @@ df = df[~((df['MovementDuration']==0) & (df['MovementInteractions']>0))]        
 #---------------------------------------------------------------------------------------------------------------------------------#
 #                                                                                                                                 *
 #---Detectar registros donde duración es igual a duración de movimiento e interacción con maravilloso módulo >0-------------------#
-diff = df_outliers['Duration'] - df_outliers['MovementDuration']                                                                  #
-diff_df = df['Duration'] - df['MovementDuration']                                                                                 #
-df_outliers = pd.concat([df_outliers,df[(diff_df == 0) & (df['ArkboxInteractions'] > 0)]])                                        #
+                                                                                                                                  #
+                                                                                                                                  #
+df_outliers = pd.concat([df_outliers,df[(df['Duration'] - df['MovementDuration'] == 0) & (df['ArkboxInteractions'] > 0)]])        #
 df_outliers = df_outliers.reset_index(drop = True)                                                                                #
-df_outliers.loc[df_outliers[(diff == 0) & (df_outliers['ArkboxInteractions'] > 0)].index,                                         #
+df_outliers.loc[df_outliers[(df_outliers['Duration'] - df_outliers['MovementDuration'] == 0) &\
+                            (df_outliers['ArkboxInteractions'] > 0)].index,                                                       #
                 'FailureType'] = 'Mod. interactions without Mod. Duration'                                                        #
                                                                                                                                   #
-df = df[~((diff_df == 0) & (df['ArkboxInteractions'] > 0))]                                                                       #
+df = df[~((df['Duration'] - df['MovementDuration'] == 0) & (df['ArkboxInteractions'] > 0))]                                       #
 #---------------------------------------------------------------------------------------------------------------------------------#
 #                                                                                                                                 *
 #---Detectar registros donde duración es mayor a duración de movimiento e interacción con maravilloso módulo es igual a 0---------#
-df_outliers = pd.concat([df_outliers,df[(diff_df > 0) & (df['ArkboxInteractions'] == 0)]])                                        #
+df_outliers = pd.concat([df_outliers,df[(df['Duration'] - df['MovementDuration'] > 0) & (df['ArkboxInteractions'] == 0)]])        #
 df_outliers = df_outliers.reset_index(drop = True)                                                                                #
-df_outliers.loc[df_outliers[(diff > 0) & (df_outliers['ArkboxInteractions'] == 0)].index,                                         #
+df_outliers.loc[df_outliers[(df_outliers['Duration'] - df_outliers['MovementDuration'] > 0) &\
+                            (df_outliers['ArkboxInteractions'] == 0)].index,                                                      #
                 'FailureType'] = 'Mod. interactions without Mod. Duration'                                                        #
                                                                                                                                   #
-df = df[~((diff_df > 0) & (df['ArkboxInteractions'] == 0))]                                                                       #
+df = df[~((df['Duration'] - df['MovementDuration'] > 0) & (df['ArkboxInteractions'] == 0))]                                       #
                                                                                                                                   #
 #***********************************************FIN LIMPIAR DATOS*****************************************************************#
 
@@ -164,7 +166,7 @@ other_2 = df_pots[['PotKey','Serial']].rename(columns = {'PotKey':'Potkey'}).set
 df_preg1 = df_info.join(other = other_1, on = 'Potkey', how = 'left')[['Name','MovementInteractions']].\
 groupby('Name')[['MovementInteractions']].sum().sort_values(by = 'MovementInteractions', ascending = False).head(10)              #
                                                                                                                                   #
-df_preg1.to_csv(r'Documents\Prueba Tekus II\preg1.csv')                                                                           #
+df_preg1.to_excel(r'Documents\Prueba Tekus II\preg1.xlsx')                                                                        #
                                                                                                                                   #
 #---------------------------------------------------------------------------------------------------------------------------------#
 #                                                                                                                                 *
@@ -172,14 +174,14 @@ df_preg1.to_csv(r'Documents\Prueba Tekus II\preg1.csv')                         
 df_preg2 = df_info.join(other = other_2, on = 'Potkey', how = 'left')[['Serial','ArkboxInteractions']].\
 groupby('Serial')[['ArkboxInteractions']].sum().sort_values(by = 'ArkboxInteractions', ascending = False).head(10)                #
                                                                                                                                   #
-df_preg2.to_csv(r'Documents\Prueba Tekus II\preg2.csv')                                                                           #
+df_preg2.to_excel(r'Documents\Prueba Tekus II\preg2.xlsx')                                                                        #
                                                                                                                                   #
 #---------------------------------------------------------------------------------------------------------------------------------#
 #                                                                                                                                 *
 #---¿Cuáles son los horarios entre semana y fines de semana en dónde se presentan más desplazamientos de ollas?-------------------#
-df_preg3 = df_info.groupby(['WeekDay','TimeofDay'])[['MovementInteractions']].sum()                                               #
+df_preg3 = df_info.groupby(['WeekDay','TimeofDay'],as_index = False)[['MovementInteractions']].sum()                                               #
                                                                                                                                   #
-df_preg3.to_csv(r'Documents\Prueba Tekus II\preg3.csv')                                                                           #
+df_preg3.to_excel(r'Documents\Prueba Tekus II\preg3.xlsx', index = False)                                                                        #
                                                                                                                                   #
 #***********************************************FIN ANÁLISIS**********************************************************************#
 

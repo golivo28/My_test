@@ -10,7 +10,7 @@ def failures(df_outliers, df_info, other_2):
     
     #¿Qué y cuántas fallas se presentaron?
     a = df_outliers.groupby('FailureType')[['Duration']].count().rename(columns = {'Duration':'Count'})
-    a.to_csv(r'Documents\Prueba Tekus II\fail1.csv')
+    a.to_excel(r'Documents\Prueba Tekus II\fail1.xlsx')
     
     #Proporción de fallas por olla
     df_fail = df_outliers.join(other = other_2, on = 'Potkey').groupby('Serial')[['Duration']].count().\
@@ -26,6 +26,6 @@ def failures(df_outliers, df_info, other_2):
 
     df_percentage = df_percentage.sort_values(by = 'Failure rate (%)', ascending = False)
 
-    df_percentage.to_csv(r'Documents\Prueba Tekus II\fail2.csv')
+    df_percentage.to_excel(r'Documents\Prueba Tekus II\fail2.xlsx')
     
     
